@@ -30,7 +30,8 @@ jobs:
           git merge upstream/main --allow-unrelated-histories --no-edit
 
       - name: Push Changes to Fork
-        env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          git push https://x-access-token:${PAT_TOKEN}@github.com/CardanoKing369/minswap-tokens.git master
+  env:
+    PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+  run: |
+    git push https://x-access-token:${PAT_TOKEN}@github.com/CardanoKing369/minswap-tokens.git main
+
