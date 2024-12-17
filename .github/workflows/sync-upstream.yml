@@ -21,7 +21,7 @@ jobs:
 
       - name: Add Upstream Remote
         run: |
-          git remote add upstream https://github.com/cardano-foundation/cardano-token-registry.git
+          git remote add upstream https://github.com/minswap/minswap-tokens.git
           git fetch upstream
 
       - name: Merge Upstream Changes
@@ -33,4 +33,4 @@ jobs:
         env:
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          git push https://x-access-token:${PAT_TOKEN}@github.com/CardanoKing369/cardano-token-registry.git master
+          git push https://x-access-token:${PAT_TOKEN}@github.com/CardanoKing369/minswap-tokens.git master
