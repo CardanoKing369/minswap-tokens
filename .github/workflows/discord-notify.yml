@@ -11,28 +11,32 @@ on:
 jobs:
   notify_discord:
     runs-on: ubuntu-latest
-    env:
-      UPSTREAM_REPO: "https://github.com/minswap/minswap-tokens" 
-      REPO_NAME: "minswap-tokens"
-
     steps:
+    
       - name: Notify Discord on Push
         if: github.event_name == 'push'
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"content\": \"🚀 A new push to the repository: ${REPO_NAME}\nCommit: ${GITHUB_SHA}\nCheck it out: ${UPSTREAM_REPO}/commit/${GITHUB_SHA}\"}" \
+          -d "$(jq -n --arg upstream "https://github.com/YOUR_UPSTREAM_REPO" \
+                     --arg sha "${GITHUB_SHA}" \
+                     '{content: "🚀 A new push to the upstream repository\nCommit: \($sha)\nCheck it out: \($upstream)/commit/\($sha)"}')" \
           ${{ secrets.DISCORD_WEBHOOK }}
 
+      
       - name: Notify Discord on Release
         if: github.event_name == 'release'
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"content\": \"🎉 A new release has been published: ${REPO_NAME}\nRelease: ${GITHUB_REF_NAME}\nCheck it out: ${UPSTREAM_REPO}/releases/latest\"}" \
+          -d "$(jq -n --arg upstream "https://github.com/YOUR_UPSTREAM_REPO" \
+                     --arg tag "${GITHUB_REF_NAME}" \
+                     '{content: "🎉 A new release has been published in the upstream repository\nRelease: \($tag)\nCheck it out: \($upstream)/releases/latest"}')" \
           ${{ secrets.DISCORD_WEBHOOK }}
 
+     
       - name: Notify Discord on Manual Trigger
         if: github.event_name == 'workflow_dispatch'
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"content\": \"🛠 This workflow was triggered manually for: ${REPO_NAME}\nCheck it out: ${UPSTREAM_REPO}\"}" \
+          -d "$(jq -n --arg upstream "https://github.com/YOUR_UPSTREAM_REPO" \
+                     '{content: "🛠 This workflow was triggered manually for the upstream repository"}')" \
           ${{ secrets.DISCORD_WEBHOOK }}
