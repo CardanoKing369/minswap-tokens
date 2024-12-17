@@ -30,5 +30,5 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"content\": \"🛠 This workflow was triggered manually for: ${GITHUB_REPOSITORY}\nTriggered by: ${GITHUB_ACTOR}\"}" \
+          -d "{\"content\": \"🛠 This workflow was triggered manually for: ${GITHUB_REPOSITORY}\"}" \
           ${{ secrets.DISCORD_WEBHOOK }}
