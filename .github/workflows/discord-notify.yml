@@ -1,42 +1,37 @@
-name: Discord Notifications
+name: Notify on Upstream Commit
 
 on:
-  push:
-    branches:
-      - main
-  release:
-    types: [published]
-  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *" # Runs every hour
+  workflow_dispatch: # Allows manual trigger of the workflow
 
 jobs:
-  notify_discord:
+  check-upstream:
     runs-on: ubuntu-latest
+
     steps:
-    
-      - name: Notify Discord on Push
-        if: github.event_name == 'push'
-        run: |
-          curl -X POST -H "Content-Type: application/json" \
-          -d "$(jq -n --arg upstream "https://github.com/YOUR_UPSTREAM_REPO" \
-                     --arg sha "${GITHUB_SHA}" \
-                     '{content: "🚀 A new push to the upstream repository\nCommit: \($sha)\nCheck it out: \($upstream)/commit/\($sha)"}')" \
-          ${{ secrets.DISCORD_WEBHOOK }}
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      
-      - name: Notify Discord on Release
-        if: github.event_name == 'release'
-        run: |
-          curl -X POST -H "Content-Type: application/json" \
-          -d "$(jq -n --arg upstream "https://github.com/YOUR_UPSTREAM_REPO" \
-                     --arg tag "${GITHUB_REF_NAME}" \
-                     '{content: "🎉 A new release has been published in the upstream repository\nRelease: \($tag)\nCheck it out: \($upstream)/releases/latest"}')" \
-          ${{ secrets.DISCORD_WEBHOOK }}
+      - name: Set Upstream
+        run: git remote add upstream https://github.com/OWNER/REPO.git
 
-     
-      - name: Notify Discord on Manual Trigger
-        if: github.event_name == 'workflow_dispatch'
+      - name: Fetch upstream commits
+        run: git fetch upstream
+
+      - name: Check for new commits
+        id: check_commits
+        run: |
+          NEW_COMMITS=$(git log HEAD..upstream/main --oneline)
+          if [ -n "$NEW_COMMITS" ]; then
+            echo "::set-output name=new_commits::$NEW_COMMITS"
+          else
+            echo "::set-output name=new_commits::"
+          fi
+
+      - name: Notify Discord
+        if: steps.check_commits.outputs.new_commits != ''
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d "$(jq -n --arg upstream "https://github.com/YOUR_UPSTREAM_REPO" \
-                     '{content: "🛠 This workflow was triggered manually for the upstream repository"}')" \
-          ${{ secrets.DISCORD_WEBHOOK }}
+            -d '{"content": "New commits in upstream:\n```'"${{ steps.check_commits.outputs.new_commits }}"'```"}' \
+            ${{ secrets.DISCORD_WEBHOOK }}
